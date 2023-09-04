@@ -100,10 +100,20 @@ module "irsa-ebs-csi" {
 resource "aws_eks_addon" "ebs-csi" {
   cluster_name             = module.eks.cluster_name
   addon_name               = "aws-ebs-csi-driver"
-  addon_version            = "v1.22.0-eksbuild.1"
+  addon_version            = "v1.20.0-eksbuild.1"
   service_account_role_arn = module.irsa-ebs-csi.iam_role_arn
   tags = {
     "eks_addon" = "ebs-csi"
     "terraform" = "true"
   }
+}
+
+resource "aws_iam_policy" "eks-worker-nodegroup-policy" {
+  name   = "${local.cluster_name}-worker"
+  policy = file("policies/eks-workers.json") # replace with the path to your IAM policy JSON file
+}
+
+resource "aws_iam_role_policy_attachment" "nodegroup-attached-policy" {
+  role       = module.eks.eks_managed_node_groups["one"].iam_role_name # replace with the name of your node group IAM instance profile
+  policy_arn = aws_iam_policy.eks-worker-nodegroup-policy.arn
 }
