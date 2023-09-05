@@ -39,6 +39,7 @@ module "vpc" {
   enable_nat_gateway   = true
   single_nat_gateway   = true
   enable_dns_hostnames = true
+  map_public_ip_on_launch = true # disable this in production for better security
 
   public_subnet_tags = {
     "kubernetes.io/cluster/${local.cluster_name}" = "shared"
@@ -59,9 +60,9 @@ module "eks" {
   cluster_version = "1.27"
 
   vpc_id                         = module.vpc.vpc_id
-  subnet_ids                     = module.vpc.private_subnets
+  subnet_ids                     = module.vpc.public_subnets # should use module.vpc.private_subnets for better isolation
   cluster_endpoint_public_access = true
-  cluster_enabled_log_types = []
+  cluster_enabled_log_types      = []
   eks_managed_node_group_defaults = {
     ami_type = "AL2_x86_64"
 
@@ -72,11 +73,12 @@ module "eks" {
     one = {
       name = "node-group-1"
 
-      instance_types = ["t3.small"]
-      key_name       = var.ssh_keyname
-      min_size       = 1
-      max_size       = 2
-      desired_size   = 1
+      instance_types              = ["t3.small"]
+      key_name                    = var.ssh_keyname
+      min_size                    = 1
+      max_size                    = 2
+      desired_size                = 1
+      associate_public_ip_address = true # set to false in production
     }
   }
 }
@@ -100,7 +102,7 @@ module "irsa-ebs-csi" {
 resource "aws_eks_addon" "ebs-csi" {
   cluster_name             = module.eks.cluster_name
   addon_name               = "aws-ebs-csi-driver"
-  addon_version            = "v1.20.0-eksbuild.1"
+  addon_version            = "v1.22.0-eksbuild.2"
   service_account_role_arn = module.irsa-ebs-csi.iam_role_arn
   tags = {
     "eks_addon" = "ebs-csi"
