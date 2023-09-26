@@ -75,7 +75,7 @@ module "eks" {
     one = {
       name = "node-group-1"
 
-      instance_types              = ["t3.small"]
+      instance_types              = ["t3.large"]
       key_name                    = var.ssh_keyname
       min_size                    = 1
       max_size                    = 2
@@ -141,12 +141,12 @@ module "db" {
   family               = "mysql8.0" # DB parameter group
   major_engine_version = "8.0"      # DB option group
   instance_class       = "db.t3.micro"
-
   allocated_storage = 20
-
   db_name  = "vms"
-  username = "vms"
+  username = "root"
+  password = "12345678"
   port     = 3306
+  manage_master_user_password = false # set to false for production
 
   db_subnet_group_name   = module.vpc.database_subnet_group
   vpc_security_group_ids = [module.security_group.security_group_id]
