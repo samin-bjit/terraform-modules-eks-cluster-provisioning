@@ -126,7 +126,7 @@ resource "aws_iam_policy" "eks-alb-policy" {
   name   = "${local.cluster_name}-alb-policy"
   policy = file("policies/eks-alb-policy.json")
 }
-# ----------------- RDS Provisioning --------------------
+#----------------- RDS Provisioning --------------------
 
 module "db" {
   source = "terraform-aws-modules/rds/aws"
@@ -150,6 +150,8 @@ module "db" {
 
   db_subnet_group_name   = module.vpc.database_subnet_group
   vpc_security_group_ids = [module.security_group.security_group_id]
+
+  depends_on = [ module.eks ]
 }
 
 module "security_group" {
